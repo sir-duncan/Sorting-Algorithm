@@ -7,7 +7,7 @@
 #include <sys/time.h>
 
 #define SIZE 100000000
-#define MAX_THREAD 8
+#define MAX_THREAD 16
 
 void verif();
 char *numToString(int num);
@@ -22,7 +22,6 @@ struct t_object {
 	Object *next;
 };
 
-//char thread_busy[MAX_THREAD];
 int nbThread = 0, counter = 1, tab[SIZE];
 pthread_t threads[MAX_THREAD];
 pthread_mutex_t lock;
@@ -31,7 +30,9 @@ void quicksort(int start, int end, int id)
 {
 	if(start >= end) return;
 	int left = start, right = end + 1;
+	//swap(start, rand() % (end - start) + 1);
 	const int bias = tab[start];
+
 
 	while(1){
         do{
@@ -47,7 +48,7 @@ void quicksort(int start, int end, int id)
 	}
 	swap(start, right); // swap the bias
 
-    if(nbThread < MAX_THREAD && ((end - right) * 100 / SIZE) >= 11) {
+    if(nbThread < MAX_THREAD && ((end - right) * 100 / SIZE) >= 100 / MAX_THREAD) {
         Object *doubleganger = malloc(sizeof(Object));
         doubleganger->left = right + 1, doubleganger->right = end;
         if(pthread_create(&threads[nbThread++], NULL, &threadFunction, (void*)doubleganger) == -1)
@@ -65,7 +66,6 @@ int main()
 {
 	nbThread = 1;
 	srand(time(NULL));
-	//int *tab = malloc(sizeof(int) * SIZE), i, result;
 	int i, result, temp = 0;
     struct timeval start, end;
     printf("[\033[34m*\033[0m] Generating Data... (%s)\n", numToString(SIZE));
@@ -75,7 +75,7 @@ int main()
 	printf("[\033[32m+\033[0m] Data generated in ");
     timerConvert(start, end);
 
-	puts("\n[\033[34m*\033[0m] Starting to sort");
+	puts("\n[\033[34m*\033[0m] Starting to sort...");
     Object *doubleganger = malloc(sizeof(Object));
 	doubleganger->left = 0, doubleganger->right = SIZE - 1, doubleganger->next = NULL;
 	gettimeofday(&start, NULL);
@@ -83,10 +83,9 @@ int main()
 
     for(i = 0; i < MAX_THREAD; i++)
         pthread_join(threads[i], NULL);
-	//sleep(3);
-    //quicksort(&tab, 0, SIZE - 1);
+
 	gettimeofday(&end, NULL);
-	printf("[\033[32m+\033[0m] Sort ended with %d threads in ", nbThread);
+	printf("[\033[32m+\033[0m] Array sorted with %d threads in ", nbThread);
     timerConvert(start, end);
 	verif();
 
@@ -100,7 +99,6 @@ void *threadFunction(void *arg)
 		if(pthread_equal(threads[i], pthread_self()) != 0) id = i;
     Object *actuel = (Object*)arg;
     //printf("Taking %d : [ %s ; %s ] => %f %%\n", id, numToString(actuel->left), numToString(actuel->right), (float)(actuel->right - actuel->left) * 100.0 / (float)SIZE);
-	fflush(stdout);
     quicksort(actuel->left, actuel->right, id);
     pthread_exit(NULL);
 }

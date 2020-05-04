@@ -39,18 +39,18 @@ int main()
     srand(time(NULL));
     int *tab = malloc(sizeof(int) * SIZE), i;
     struct timeval start, end;
-    printf("[*] Generating Data... (%s)\n", numToString(SIZE));
-    gettimeofday(&start, NULL);
-    for(i = 0; i < SIZE; i++) tab[i] = rand();
-    gettimeofday(&end, NULL);
-    printf("[+] Data generated in ");
+    printf("[\033[34m*\033[0m] Generating Data... (%s)\n", numToString(SIZE));
+	gettimeofday(&start, NULL);
+	for(i = 0; i < SIZE; i++) tab[i] = rand();
+	gettimeofday(&end, NULL);
+	printf("[\033[32m+\033[0m] Data generated in ");
     timerConvert(start, end);
 
-    puts("\n[*] Starting to sort");
+    puts("\n[\033[34m*\033[0m] Starting to sort...");
     gettimeofday(&start, NULL);
     quicksort(&tab, 0, SIZE-1);
     gettimeofday(&end, NULL);
-    printf("[+] Sort ended in ");
+    printf("[\033[32m+\033[0m] Array sorted in ");
     timerConvert(start, end);
     verif(tab);
 
