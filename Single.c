@@ -5,7 +5,7 @@
 #include <string.h>
 #include <sys/time.h>
 
-#define SIZE 100000000
+#define SIZE 50000000
 
 void verif(int *array);
 char *numToString(int num);

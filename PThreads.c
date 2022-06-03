@@ -33,7 +33,6 @@ void quicksort(int start, int end, int id)
 	//swap(start, rand() % (end - start) + 1);
 	const int bias = tab[start];
 
-
 	while(1){
         do{
             right--;
