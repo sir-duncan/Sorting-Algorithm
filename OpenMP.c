@@ -6,7 +6,8 @@
 #include <string.h>
 #include <sys/time.h>
 
-#define SIZE 100000000
+#define SIZE 		10000000
+#define ITERATION 	50
 
 int *generateData();
 
@@ -14,7 +15,6 @@ char *numToString(int num);
 
 void verif(int *array);
 void swap(int *a, int *b);
-void timerConvert(struct timeval start, struct timeval end);
 
 void quicksort(int *array, int start, int end)
 {
@@ -37,20 +37,23 @@ void quicksort(int *array, int start, int end)
 	}
 	swap(&array[start], &array[right]);
 
-	#pragma omp task shared(array) if(start >= 0)
-	quicksort(array, start, right - 1);
+	if (((end - right) * 100 / SIZE) >= 100 / 16) {
+		#pragma omp task shared(array) if(start >= 0)
+		quicksort(array, start, right - 1);
 
-	#pragma omp task shared(array) if(end < SIZE)
-	quicksort(array, right + 1, end);
+		quicksort(array, right + 1, end);
+	} else {
+		quicksort(array, start, right - 1);
+		quicksort(array, right + 1, end);
+	}
 }
 
 int main()
 {
-	// omp_set_num_threads(8);
 	srand(time(NULL));
 	double start, end;
 	int num_threads = 0, mean = 0;
-	for (int i = 0; i < 100; i++) {
+	for (int i = 0; i < ITERATION; i++) {
 		int *tab = (int *) generateData();
 
 		start = omp_get_wtime();
@@ -65,8 +68,9 @@ int main()
 		mean += (int)((end - start) * 1000);
 		printf("%d ms -> %d\n", (int)((end - start) * 1000), num_threads);
 		verif(tab);
+		free(tab);
 	}
-	printf("Total mean: %d\n", (int)(mean / 100.0));
+	printf("Total mean: %d sec\n", (mean / ITERATION));
 
 	return 0;
 }
@@ -78,7 +82,7 @@ int *generateData() {
 	return tab;
 }
 
-void swap(int *a, int *b) // (int **array, int a, int b)
+void swap(int *a, int *b)
 {
 	int t = *a;
 	*a = *b;
@@ -91,12 +95,11 @@ void verif(int *array)
 	for(i = 1; i < SIZE; i++){
 		if(array[i-1] > array[i]){
 			printf("[-] Problem in the sort tab[%d] = %d, tab[%d] = %d\n", i - 1, array[i - 1], i, array[i]);
-			for(j = i - 3; j < i + 10; j++) // display.
+			for(j = i - 3; j < i + 10; j++)
 				printf("[ %d ] = %d\n", j, array[j]);
 			return;
 		}
 	}
-	// printf("[+] Array correctly sorted\n\n");
 }
 
 char *numToString(int num)
@@ -111,13 +114,4 @@ char *numToString(int num)
 	}
 	string[i] = '\0';
 	return string;
-}
-
-void timerConvert(struct timeval start, struct timeval end)
-{
-	int executionTime = (end.tv_sec - start.tv_sec) * 1000;
-	executionTime += (end.tv_usec - start.tv_usec) / 1000;
-	printf("%d ms\n", executionTime);
-	//  * 1000;
-	// printf("%d sec %d ms\n", executionTime / 1000, executionTime - ((executionTime / 1000) * 1000));
 }
