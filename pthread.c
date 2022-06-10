@@ -6,8 +6,8 @@
 #include <pthread.h>
 #include <sys/time.h>
 
-#define SIZE 		500000000
-#define NUMBER 		50
+#define SIZE 		10000000
+#define NUMBER 		10
 #define MAX_THREAD 	16
 
 int *generateData();
@@ -38,12 +38,10 @@ void quicksort(int* array, int start, int end, int id) {
 
 	while(1) {
 		do {
-			right--;
-			if(right < 0) break;
+			if(--right < 0) break;
 		} while (array[right] > bias);
 		do {
-			left++;
-			if(left > SIZE - 1) break;
+			if(++left > SIZE - 1) break;
 		} while (array[left] < bias);
 		if(left < right) swap(&array[left], &array[right]);
 		else break;
@@ -69,10 +67,10 @@ int main()
 {
 	srand(time(NULL));
 	pthread_spin_init(&lock, PTHREAD_PROCESS_PRIVATE);
-	int i, mean = 0;
+	int i, mean = 0, max = 0, min = 0, timer = 0;
 	struct timeval start, end;
 
-	for (int j = 0; j < NUMBER; j++) {
+	for (int j = 0; j < NUMBER; ++j) {
 		nbThread = 1;
 		int *tab = (int *) generateData();
 
@@ -82,30 +80,36 @@ int main()
 
 		gettimeofday(&start, NULL);
 		if(pthread_create(&threads[0], NULL, &threadFunction, (void*)doubleganger) == -1) exit(EXIT_FAILURE);
-		for(i = 0; i < MAX_THREAD; i++) pthread_join(threads[i], NULL);
+		for(i = 0; i < nbThread; i++) pthread_join(threads[i], NULL);
 		gettimeofday(&end, NULL);
 
-		mean += timerConvert(start, end);
+		timer = timerConvert(start, end);
+		mean += timer;
+		if (timer > max) max = timer;
+		if (min == 0) min = timer;
+		if (timer < min) min = timer;
+
 		printf("%d ms -> %d\n", timerConvert(start, end), nbThread);
 		verif(tab);
 		free(doubleganger);
 		free(tab);
 	}
 	printf("Total mean: %d sec\n", (mean / NUMBER));
+	printf("Min: %d ms, Max: %d ms\n", min, max);
 
 	return 0;
 }
 
 int *generateData() {
 	int *tab = malloc(sizeof(int) * SIZE), i;
-	for (i = 0; i < SIZE; i++) tab[i] = rand();
+	for (i = 0; i < SIZE; ++i) tab[i] = rand();
 
 	return tab;
 }
 
 void *threadFunction(void *arg) {
 	int id, i;
-	for(i = 0; i < MAX_THREAD; i++) {
+	for(i = 0; i < MAX_THREAD; ++i) {
 		if(pthread_equal(threads[i], pthread_self()) != 0) id = i;
 	}
 	Object *actuel = (Object*)arg;
@@ -118,9 +122,9 @@ char *numToString(int num) {
 	sprintf(temp, "%d", num);
 	size = strlen(temp) + ((strlen(temp) - 1) / 3);
 	string = malloc(sizeof(char) * size);
-	for(i = 0, j = 0; i < size; i++) {
+	for(i = 0, j = 0; i < size; ++i) {
 		if((size - i) % 4 == 0) string[i] = ' ';
-		else string[i] = temp[j], j++;
+		else string[i] = temp[j], ++j;
 	}
 	string[i] = '\0';
 	return string;
@@ -142,10 +146,10 @@ int timerConvert(struct timeval start, struct timeval end) {
 
 void verif(int *array) {
 	int i, j;
-	for(i = 1; i < SIZE; i++) {
+	for(i = 1; i < SIZE; ++i) {
 		if(array[i-1] > array[i]) {
 			printf("[-] Problem in the sort tab[%s] = %s, tab[%s] = %s\n", numToString(i - 1), numToString(array[i - 1]), numToString(i), numToString(array[i]));
-			for(j = i - 3; j < i + 10; j++) {
+			for(j = i - 3; j < i + 10; ++j) {
 				if(j == i) printf("\033[31m[ %s ] = %s\n\033[0m", numToString(j), numToString(array[j]));
 				else printf("[ %s ] = %s\n", numToString(j), numToString(array[j]));
 			}

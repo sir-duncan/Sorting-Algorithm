@@ -6,7 +6,7 @@
 #include <sys/time.h>
 
 #define SIZE		10000000
-#define ITERATION   50
+#define ITERATION   5
 
 int *generateData();
 int timerConvert(struct timeval start, struct timeval end);
@@ -23,12 +23,10 @@ void quicksort(int *array, int start, int end) {
 	const int bias = array[start];
 	while(1) {
 		do {
-			right--;
-			if(right < 0) break;
+			if(--right < 0) break;
 		} while(array[right] > bias);
 		do {
-			left++;
-			if(left > SIZE - 1) break;
+			if(++left > SIZE - 1) break;
 		} while(array[left] < bias);
 		if(left < right) swap(&array[left], &array[right]);
 		else break;
@@ -44,8 +42,10 @@ int main()
 	int i, mean = 0;
 	struct timeval start, end;
 
-	for (int j = 0; j < ITERATION; j++) {
-		int *tab = (int *)generateData();
+	int *ref = (int *)generateData();
+	for (int j = 0; j < ITERATION; ++j) {
+		int *tab = malloc(SIZE * sizeof(int));
+		for (i = 0; i < SIZE; ++i) tab[i] = ref[i];
 
 		gettimeofday(&start, NULL);
 		quicksort(tab, 0, SIZE - 1);
@@ -56,7 +56,7 @@ int main()
 		verif(tab);
 		free(tab);
 	}
-	printf("Total mean: %d sec\n", (mean / ITERATION));
+	printf("Total mean: %d ms\n", (mean / ITERATION));
 
 	return 0;
 }
@@ -76,10 +76,10 @@ void swap(int *a, int *b) {
 
 void verif(int *array) {
 	int i, j;
-	for(i = 1; i < SIZE; i++) {
+	for(i = 1; i < SIZE; ++i) {
 		if(array[i-1] > array[i]) {
 			printf("[-] Problem in the sort tab[%d] = %d, tab[%d] = %d\n", i - 1, array[i - 1], i, array[i]);
-			for(j = i - 3; j < i + 10; j++)
+			for(j = i - 3; j < i + 10; ++j)
 				printf("[ %d ] = %d\n", j, array[j]);
 			return;
 		}
@@ -91,7 +91,7 @@ char *numToString(int num) {
 	sprintf(temp, "%d", num);
 	size = strlen(temp) + ((strlen(temp) - 1) / 3);
 	string = malloc(sizeof(char) * size);
-	for(i = 0, j = 0; i < size; i++) {
+	for(i = 0, j = 0; i < size; ++i) {
 		if((size - i) % 4 == 0) string[i] = ' ';
 		else string[i] = temp[j], j++;
 	}
