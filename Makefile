@@ -4,14 +4,17 @@ OFLAG=-fopenmp
 CFLAGS=-O3
 TFLAG=-lpthread
 
-single:
-	$(CC) -o $(EXEC) single.c $(CFLAGS)
+single: single.o functions.o
+	$(CC) -o $(EXEC) $^ $(CFLAGS)
 
-pthread:
-	$(CC) -o $(EXEC) pthread.c $(CFLAGS) $(TFLAG)
+pthread: pthread.o functions.o
+	$(CC) -o $(EXEC) $^ $(CFLAGS) $(TFLAG)
 
-openmp:
-	$(CC) -o $(EXEC) openmp.c $(CFLAGS) $(OFLAG)
+openmp: openmp.o functions.o
+	$(CC) -o $(EXEC) $^ $(CFLAGS) $(OFLAG)
+
+%.o: %.c
+	$(CC) -o $@ -c $< $(CFLAGS)
 
 generate:
 	$(CC) -o gen gen_arrays.c
@@ -19,7 +22,7 @@ generate:
 	rm gen
 
 clean:
-	rm $(EXEC) *.exe
+	rm $(EXEC) *.exe *.o
 
 run:
-	./$(EXEC)
+	@./$(EXEC)
